@@ -1194,6 +1194,37 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
+def integration_devices(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
+    """Get device ids for devices tied to an integration/domain.
+
+    Provide entry_name as domain to get all device id's for a integration/domain
+    or provide a config entry title for filtering between instances of the same
+    integration.
+    """
+    all_entries = hass.config_entries.async_entries()
+    device_reg = device_registry.async_get(hass)
+
+    conf_entries = [
+        entry.entry_id for entry in all_entries if entry.title == entry_name
+    ]
+
+    if len(conf_entries) == 0:
+        # fallback to just returning all devices for a domain
+        conf_entries = [
+            entry.entry_id for entry in all_entries if entry.domain == entry_name
+        ]
+
+    entries = [
+        entry.id
+        for conf_entry in conf_entries
+        for entry in device_registry.async_entries_for_config_entry(
+            device_reg, conf_entry
+        )
+    ]
+
+    return entries
+
+
 def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     """Get entity ids for entities tied to an integration/domain.
 
@@ -1276,6 +1307,12 @@ def is_device_attr(
 ) -> bool:
     """Test if a device's attribute is a specific value."""
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def devices(hass: HomeAssistant) -> Iterable[str | None]:
+    """Return all devices."""
+    dev_reg = device_registry.async_get(hass)
+    return [device.id for device in dev_reg.devices.values()]
 
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
@@ -2360,6 +2397,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["areas"] = hassfunction(areas)
         self.filters["areas"] = pass_context(self.globals["areas"])
 
+        self.globals["devices"] = hassfunction(devices)
+        self.filters["devices"] = pass_context(self.globals["devices"])
+
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = pass_context(self.globals["area_id"])
 
@@ -2375,6 +2415,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
+        )
+
+        self.globals["integration_devices"] = hassfunction(integration_devices)
+        self.filters["integration_devices"] = pass_context(
+            self.globals["integration_devices"]
         )
 
         if limited:

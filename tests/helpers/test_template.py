@@ -2797,6 +2797,55 @@ async def test_integration_entities(
     assert info.rate_limit is None
 
 
+async def test_integration_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test integration_devices function."""
+    # test devices for given config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Mock bridge")
+    config_entry.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(domain="mock", title="Mock bridge 2")
+    config_entry_2.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "FE:DC:BA:98:76:54")},
+    )
+
+    device_entry_3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry, device_id=device_entry.id
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry, device_id=device_entry_2.id
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry, device_id=device_entry_3.id
+    )
+
+    info = render_to_info(hass, "{{ integration_devices('Mock bridge') }}")
+    assert_result_info(info, [device_entry.id, device_entry_2.id])
+    assert info.rate_limit is None
+
+    # Test falling back to domain
+    info = render_to_info(hass, "{{ integration_devices('mock') }}")
+    assert_result_info(info, [device_entry.id, device_entry_2.id, device_entry_3.id])
+    assert info.rate_limit is None
+
+    # Test non existing integration/entry title
+    info = render_to_info(hass, "{{ integration_devices('abc123') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
 async def test_config_entry_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -3011,6 +3060,32 @@ async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> Non
     area2 = area_registry.async_get_or_create("area2")
     info = render_to_info(hass, "{{ areas() }}")
     assert_result_info(info, [area1.id, area2.id])
+    assert info.rate_limit is None
+
+
+async def test_devices(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
+    """Test devices function."""
+    # Test no devices
+    info = render_to_info(hass, "{{ devices() }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test one device
+    device1 = device_registry.async_get_or_create(
+        config_entry_id="test",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    info = render_to_info(hass, "{{ devices() }}")
+    assert_result_info(info, [device1.id])
+    assert info.rate_limit is None
+
+    # Test multiple devices
+    device2 = device_registry.async_get_or_create(
+        config_entry_id="test",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EE")},
+    )
+    info = render_to_info(hass, "{{ devices() }}")
+    assert_result_info(info, [device1.id, device2.id])
     assert info.rate_limit is None
 
 
