@@ -14,6 +14,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
+# Test
 async def test_exclude_attributes(
     recorder_mock: Recorder,
     hass: HomeAssistant,
