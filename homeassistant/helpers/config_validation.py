@@ -58,6 +58,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
+    CONF_NAMESPACE,
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
@@ -1292,6 +1293,7 @@ SCRIPT_VARIABLES_SCHEMA = vol.All(
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
+SCRIPT_NAMESPACE_SCHEMA = vol.Schema(str)
 
 def script_action(value: Any) -> dict:
     """Validate a script action."""
@@ -1822,6 +1824,7 @@ SCRIPT_ACTION_REPEAT = "repeat"
 SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_VARIABLES = "variables"
+SCRIPT_ACTION_NAMESPACE = "namespace"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
@@ -1840,6 +1843,7 @@ ACTIONS_MAP = {
     CONF_CHOOSE: SCRIPT_ACTION_CHOOSE,
     CONF_WAIT_FOR_TRIGGER: SCRIPT_ACTION_WAIT_FOR_TRIGGER,
     CONF_VARIABLES: SCRIPT_ACTION_VARIABLES,
+    CONF_NAMESPACE: SCRIPT_ACTION_NAMESPACE,
     CONF_IF: SCRIPT_ACTION_IF,
     CONF_SERVICE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,

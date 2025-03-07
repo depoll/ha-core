@@ -63,6 +63,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_UNTIL,
     CONF_VARIABLES,
+    CONF_NAMESPACE,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
